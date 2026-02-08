@@ -1,34 +1,45 @@
-name: Build
+name: Build ThunderStormS Kernel Note10Plus
 
-on: [push]
+on:
+  workflow_dispatch:
 
 jobs:
   build:
-    runs-on: ubuntu-latest
-
+    runs-on: ubuntu-22.04
     steps:
-    - uses: actions/checkout@v2
-    - name: Install mkbootimg
-      run: |
-        wget -q https://android.googlesource.com/platform/system/tools/mkbootimg/+archive/refs/heads/master.tar.gz -O - | tar xzf - mkbootimg.py
-        chmod +x mkbootimg.py
-        sudo mv mkbootimg.py /usr/local/bin/mkbootimg
-    - name: Install avbtool
-      run: |
-        wget -q https://android.googlesource.com/platform/external/avb/+archive/refs/heads/android10-dev.tar.gz -O - | tar xzf - avbtool
-        chmod +x avbtool
-        sudo mv avbtool /usr/local/bin/avbtool
-    - name: Install toolchain
-      run: |
-        git submodule deinit --force --all
-        rm -fr toolchain
-        git add .
-        mkdir toolchain
-        git submodule add --branch arter97 https://github.com/CruelKernel/samsung-exynos9820-toolchain toolchain/arter97
-    - name: Kernel Build
-      run: echo 11 | ./ts-build-arter97.sh
-    - name: Upload Kernel Zip
-      uses: actions/upload-artifact@v2
-      with:
-        name: ThunderStormsKernel
-        path: ./builds/*.zip
+      - name: Checkout Source Code
+        uses: actions/checkout@v4
+        with:
+          # Instructions: Switch to the branch you need
+          ref: master
+          fetch-depth: 0
+          submodules: recursive
+
+      - name: Install Prerequisites
+        # Based on developer's "Install prerequisites" section
+        run: |
+          sudo apt-get update
+          sudo apt-get install -y build-essential libncurses-dev libtinfo5 bc bison flex libssl-dev libelf-dev android-tools-adb git python3 curl wget unzip re2c
+
+      - name: Setup mkbootimg
+        # Based on developer's "Install mkbootimg" section
+        run: |
+          wget -q https://android.googlesource.com/platform/system/tools/mkbootimg/+archive/refs/heads/master.tar.gz -O - | tar xzf - mkbootimg.py
+          chmod +x mkbootimg.py
+          sudo mv mkbootimg.py /usr/local/bin/mkbootimg
+
+      - name: Build Process
+        # Using the developer's exact compile command: ./build mkimg name="ThunderStorms" model=N975F
+        run: |
+          chmod +x build
+          # We provide the model N975F for Note 10+
+          ./build mkimg name="ThunderStorms-Elite" model=N975F toolchain=proton
+
+      - name: Upload Finished Kernel
+        uses: actions/upload-artifact@v4
+        with:
+          name: ThunderStormS-Kernel-Note10Plus
+          path: |
+            *.img
+            prime/*.zip
+            out/*.zip
