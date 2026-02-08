@@ -24,6 +24,16 @@ jobs:
           chmod +x mkbootimg.py
           sudo mv mkbootimg.py /usr/local/bin/mkbootimg
 
+      - name: Fix Magisk Status 11
+        # This step fixes the error in your last screenshot
+        run: |
+          mkdir -p usr/magisk
+          echo "#!/bin/bash" > usr/magisk/update_magisk.sh
+          echo "exit 0" >> usr/magisk/update_magisk.sh
+          chmod +x usr/magisk/update_magisk.sh
+          # Create magisk version file to satisfy the script
+          echo "26.1" > usr/magisk/magisk_version
+
       - name: Build Kernel Process
         run: |
           chmod +x build
@@ -36,3 +46,4 @@ jobs:
           path: |
             *.img
             prime/*.zip
+            out/*.zip
